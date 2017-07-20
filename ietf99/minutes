@@ -1,0 +1,157 @@
+YANG of Things
+Side meeting
+July 20, 10AM-12PM, Tyrolka, Mezzanine Level
+
+Remote participation via https://jitsi.tools.ietf.org/yot
+
+Participants:
+    
+Note takers:
+    Jaime
+    Carsten
+    Ana 
+    Ivaylo
+    Dominique   
+
+Agenda:
+10:00 am> Introduction, Why YANG for IoT?  [10 min]
+
+Materials can be found on https://github.com/Ixau/yot.git
+
+Alex: YOT = Yang of Things, so when in doubt the focus should be on what is needed in the Things world
+
+Alex: multiple protocol bindings to NETCONF, RESTCONF, CoAP.  Multiple representations in XML, JSON, CBOR.
+Alex: Focused the discussion on the things management
+Juergen Schoenvalder: Netconf over SSH, Restconf runs over TLS, so don't forget the security aspect
+Alex: This is something that we are going to consider for sure, thanks for this remark.
+
+Eliot: In our usage of YANG there is no RESTCONF or NETCONF interface. Andy is mentioning there is ways aroud it. The stack that you have is one of many. 
+CB: YANG is a technology to describe data at rest (on an application). 
+Eliot: is not data in motion is data at rest.
+CB: at rest mean data in a data store + API to retrieve. In motion, is a message on its own. MUD descriptions are static data. 
+CB: The scope of the activity is to get YANG on "things". RFC7228 (https://tools.ietf.org/html/rfc7228#page-4) the type of devices that'd support YANG would be Class 2 devices. RAM ~ 50 KiB, Flash ~ 250 KiB. +CBOR would be for added efficiency and compression.
+Andy Bierman: Zerotouch and YANG is being extended to mode structured data.
+Alex: We can have very constrained devices using YANG for some things, not having a datastore and some more advanced functions.
+Igor: We also use YANG for interfaces between controlers... ?? In away only to provide well structured data for the communicating parties? What are we trying to do with YoT that is not there already? 
+CB: Thing has a relationship with the physical world, but does not necesserily have constrained resources or constrained communication links.
+
+
+10:10 am> The CoMI framework [35 min]
+  10 min:  The CoMI protocol – Michel Veillette, Peter van der Stok, Alexander Pelov
+  https://tools.ietf.org/html/draft-ietf-core-comi-01 (Michel Veillette)
+  CoAP request, paylaod encoded in CBOR.
+  shows example, 32 byte payload.
+  event stream through the GET "observe" option.
+  All the yang data node is encoding in CBOR representation
+  
+  
+  10 min:  YANG-to-CBOR – Michel Veillette
+  10 min:  The SID registry –  Alexander Pelov
+  https://tools.ietf.org/html/draft-ietf-core-sid
+  Registry that keeps the mapping btw 64 SID identifiers and the YANG model.
+  Igor: FORCES might do a similar thing. Links 64 bit identifiers to data/model? nodes. URL?
+  Alex explains how SID works, why global unchangable identifiers simplify the lookup and interoperability.
+  Igor: Are you losing (compability with JSON?)
+  Alex: No
+  CB: Initiallly people thought that those identifiers are too large. We needed to be able to generate identifiers for people that are not interested in ... so we had to map a large space of all current and future YANG model identifiers to a structured space?? We are able to put automation that helps us put in place the identifiers management.
+  Bill S: If you need to create YoT you really need such identifiers. But then you would want to register anything and everything. Some thought needs to be given to the reusability of the existing identifiers in the registry instead of creating new ones. So a small modification to a YANG model can lead to creating a separate set of identifiers?
+  JCZ: There is a policy problem
+  Andy: We should agree that a device can have more than 100 KiB. Some people are more concerned with development cost, not for bytes on the wire. 
+  Alex: We need to make this process transparent.
+  Andy: None of this is transparent. Developers should be able to debug.
+  Igor: How does your compression scheme compare with protocol buffers (https://developers.google.com/protocol-buffers/)
+  Alex:  In the description of the data you have the schemes to give the information
+  Carsten: Schema vs serialization. Useful to be able to process data without schema. XGML->XML. JSON can be parsed without a definition of the data. CBOR takes that to the binary space. 
+  Alistair : you have a 3 level hierarchy for the r
+  Alex: explaining registry. 
+  Alex: only 2 levels, well if you take the whole space there are 3, it is : Then you have a 3 level OID on top of the SID. Which is fine, I'm just clarifying. Any attempt to do a deduplicate accross different range registries.
+  Alex: No, we don't want to enforce too much restrictions, so for now this is not envisioned.
+  Alistair : I'm just clarifying, no criticism. How about units [does he refer to ucum units?]
+  CB: ?? It makes sense to keep together identifiers that are used together, so we want to allocate sids per yang model, so that those SIDs will be close.
+  Juergen Schoenvalder?: ?? It is going to be difficult considering all the parties included (IANA, ...).
+  CB: We don't want to influence how YANG models are created
+  Andy: we could have done this in the SNMP space, collapsing everything on one number is a formidable challenge. Stability, robustness, etc is important.
+  Alex: I'm optimistic. 
+  Alistair : How about version control. Are new numbers going to be in different blocks.
+  Michel: numbers are unique, the tool would provide a new number. Maybe you will leave some extra SIDs after the ones for your old YANG model for future revisions?
+  Alistair: so it's like the sectors on my hard drive. 
+  Andy: this just maps the schema nodeid to numbers. No types, no extra information. You change your path, you change your number.
+   ??: If I look into CoMI and what's already there, I can check that it's doing whatever it is supposed to do. How do we stack different levels??
+  Alex: The most constained devices will have only `/c` and a couple of SIDs. If you need some more advanced management features, you can use this protocol for that
+  ??: My question is how much overhead this protocol will introduce. I have a CoAP stack already. How much overhead will this add?
+  Michel: We don't create a new protocol, we only define how to use CoAP for this new functionality.
+  JC: Your device does not necessarily need to know that it's speaking CoAP. We had a demo like that in Chicago.
+  ??: You need to have a CoMI agent.
+
+
+   5 min: Schema mount – Michel Veillette
+  Starts the presentation
+  Andy: Shema mount is used ... Why do you need this in constained devices? I don't see this in Class 1 devices.
+  Michel: In zigbee they do ... So I think we need to at least look how this is going to be supported.
+
+10:45 am> Mapping existing tools to YANG [05min]
+  5 min: LWM2M to CoMI - Peter van der Stok, Jaime Jimenez
+  https://tools.ietf.org/html/draft-vanderstok-core-yang-lwm2m-00 (Jaime Jimenez)
+  Bil: Are we trying to manage the devices of LWM2M?
+  Jaime: No it is only the mapping, as a result of the IOTSI workshop and as an exercise to see if it is possible. 
+  ??: Do you try to map in the other way? a Yang module to LWM2M?!
+  Jaime: I don't think that's possible as LWM2M Object Model does not have the language/vocabulaty. YANG is much more verbose than LWM2M. 
+  CB: There are a number of modeling languages out there. I think if we want to have YANG as a modeling language for applications, such kind of work is very important. One thing mentioned is that the available data types in YANG might not be sufficient. Some development in YANG might be needed, so that it is well suited for modeling application data.
+
+10:50 am>CoMI for IoT (as of today) [15 min]
+  5 min: Firmware update over CoMI - Michel Veillette, Alexander Pelov
+  Eliot?: Are we trying to save bytes. Soon a number of devices will have a MiB of data. In this case this might not be needed.
+  Andy: A number of devices are not power constained.
+  Eliot?: ??
+  Michel: In order to be able to update the node, you need to know which version it is running.
+  Eliot?: Yes, absolutely. But my question is where this information this needs to reside. On the devise inself or outside?
+  Michel: The manifest is on the server side.
+  Demir: Brings the question about certifications and different versions of the software that is running on the devices.
+  CB: The firmware update is not the focus of this meeting. There is another meeting happening right now that discusses this. Here we are presenting how firmware update can be mapped to YANG model.
+
+
+  5 min: Event logger and notification control - Michel Veillette (skipped)
+  5 min: LPWAN - Laurent Toutain, Ana Minaburo (skipped)
+
+11:05 am>  Yang , Embedded Systems and Devices [10min]
+  5 min:  YANG for embedded systems: Andy Bierman
+  Presentation, https://github.com/Ixau/yot/blob/master/ietf99/51%20-%20yang_in_embedded_systems.pdf
+  Target is to have YANG all the way down from SDN to IoT.
+  Step down - JSON, next - CBOR
+  
+  5 min:  Manufacturer Usage Description (MUD) - Eliot Lear, Thorsten Dahm
+   Presenting https://github.com/Ixau/yot/blob/master/ietf99/52%20-%20mud-yot.pdf
+   https://tools.ietf.org/html/draft-ietf-opsawg-mud-07
+Eliot Lear : MUD is about configuring network not a device. 
+Communication flow in the device is quite simple - devices can run anything they want (LLDP / DHCP / Something). There is an extention - the footpring on the device is minimized.
+The device is constrained, it is not going to imlpement a new bunch of new protocols.
+
+Some sort of DHCP - picked up by a switch - sent to a controller (somewhere there is a HTTP server, and probably there will be a RADIUS server)
+- The MUD Controller fetches YANG descriptions from the URL that is provided .
+
+MUD Doesn't use NETCONF ; nor to configure the devices.
+
+
+
+11:15 am> Discussions [45 min]
+
+Do you feel this should be something we should be doing?
+- You start with a YANG 
+- Describing interaces / Repositories
+- Next steps
+
+Carsten: Identify gaps
+- Do people want to use YANG for application data?
+
+People are using YANG as schema language for MUD - this is easily confusable with APIs
+- There are defined types - so 
+
+Mutual education
+- What CORE would like to take home: what the scope of the CoMI work should be? Should we try to include Applications?
+
+
+Q: Was that a useful meeting?
+- all hands up
+
+Q: should we do it again?
+- wide majority of hands up
